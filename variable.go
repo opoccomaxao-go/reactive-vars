@@ -10,6 +10,7 @@ type Variable interface {
 	OnChange(func())
 	Name() string
 	Value() interface{}
+	Prefix() string
 }
 
 type variable struct {
@@ -38,4 +39,8 @@ func (v *variable) Name() string {
 
 func (v *variable) Value() interface{} {
 	return v.value.Load()
+}
+
+func (variable) Prefix() string {
+	return ""
 }

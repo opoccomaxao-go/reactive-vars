@@ -18,3 +18,7 @@ func (f *float) Get() float64 {
 func (f *float) Set(value float64) {
 	f.set(value)
 }
+
+func (float) Prefix() string {
+	return "f:"
+}

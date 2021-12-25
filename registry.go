@@ -108,7 +108,7 @@ func (r *registry) Dump() map[string]interface{} {
 	res := map[string]interface{}{}
 
 	for _, v := range r.vars {
-		res[v.Name()] = v.Value()
+		res[v.Prefix()+v.Name()] = v.Value()
 	}
 
 	return res

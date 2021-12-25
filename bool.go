@@ -17,3 +17,7 @@ func (b *boolean) Get() bool {
 func (b *boolean) Set(value bool) {
 	b.set(value)
 }
+
+func (boolean) Prefix() string {
+	return "b:"
+}

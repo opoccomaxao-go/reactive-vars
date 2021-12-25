@@ -45,7 +45,8 @@ func TestRegistry(t *testing.T) {
 	r.Bool("b").Set(true)
 
 	assert.Equal(t, map[string]interface{}{
-		"a": float64(0),
-		"b": true,
+		"f:a": float64(0),
+		"b:a": false,
+		"b:b": true,
 	}, r.Dump())
 }
