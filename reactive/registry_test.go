@@ -12,8 +12,8 @@ func TestRegistry(t *testing.T) {
 	r.Debug()
 
 	changes := []string{}
-	bindUpdateChanges := func(change string) func() {
-		return func() {
+	bindUpdateChanges := func(change string) func(interface{}) {
+		return func(interface{}) {
 			changes = append(changes, change)
 		}
 	}

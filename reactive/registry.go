@@ -5,7 +5,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/opoccomaxao-go/event"
+	"github.com/opoccomaxao-go/event/v2"
 )
 
 type Registry interface {
@@ -18,10 +18,8 @@ type Registry interface {
 type registry struct {
 	mu     sync.Mutex
 	config Config
-	ee     *event.Emitter
 	vars   []Variable
 	log    func(string, interface{})
-	id     rune
 }
 
 type Config struct {
@@ -33,7 +31,6 @@ func discard(string, interface{}) {}
 func New(config Config) Registry {
 	return &registry{
 		config: config,
-		ee:     event.NewEmitter(),
 		vars:   make([]Variable, 0, 100),
 		log:    discard,
 	}
@@ -51,15 +48,13 @@ func (r *registry) Float(name string) Float {
 
 	res := &float{
 		variable: variable{
-			ee:   r.ee,
-			name: name,
-			log:  r.log,
-			id:   string(r.id),
+			event: event.NewEvent(),
+			name:  name,
+			log:   r.log,
 		},
 	}
 
 	r.vars = append(r.vars, res)
-	r.id++
 
 	res.value.Store(float64(0))
 
@@ -78,15 +73,13 @@ func (r *registry) Bool(name string) Bool {
 
 	res := &boolean{
 		variable: variable{
-			ee:   r.ee,
-			name: name,
-			log:  r.Log,
-			id:   string(r.id),
+			event: event.NewEvent(),
+			name:  name,
+			log:   r.Log,
 		},
 	}
 
 	r.vars = append(r.vars, res)
-	r.id++
 
 	res.value.Store(false)
 

@@ -3,7 +3,7 @@ module github.com/opoccomaxao-go/reactive-vars
 go 1.17
 
 require (
-	github.com/opoccomaxao-go/event v1.1.5
+	github.com/opoccomaxao-go/event/v2 v2.0.1
 	github.com/stretchr/testify v1.7.0
 )
 
