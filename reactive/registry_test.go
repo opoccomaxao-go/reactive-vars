@@ -7,22 +7,23 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func bindChanges[T any](dest *[]string) func(T) {
+	return func(T) {
+		*dest = append(*dest, getPrefix[T]())
+	}
+}
+
 func TestRegistry(t *testing.T) {
 	r := New(Config{Name: "test"})
 	r.Debug()
 
 	changes := []string{}
-	bindUpdateChanges := func(change string) func(interface{}) {
-		return func(interface{}) {
-			changes = append(changes, change)
-		}
-	}
 
 	b := r.Bool("a")
 	f := r.Float("a")
 
-	b.OnChange(bindUpdateChanges("b"))
-	f.OnChange(bindUpdateChanges("f"))
+	b.OnChange(bindChanges[bool](&changes))
+	f.OnChange(bindChanges[float64](&changes))
 
 	b.Set(true)
 	time.Sleep(time.Millisecond)
@@ -40,13 +41,19 @@ func TestRegistry(t *testing.T) {
 	f2.Set(0)
 	time.Sleep(time.Millisecond)
 
-	assert.Equal(t, []string{"b", "b", "f", "f", "f"}, changes)
+	assert.Equal(t, []string{
+		"bool",
+		"bool",
+		"float64",
+		"float64",
+		"float64",
+	}, changes)
 
 	r.Bool("b").Set(true)
 
 	assert.Equal(t, map[string]interface{}{
-		"f:a": float64(0),
-		"b:a": false,
-		"b:b": true,
+		"float64:a": float64(0),
+		"bool:a":    false,
+		"bool:b":    true,
 	}, r.Dump())
 }
