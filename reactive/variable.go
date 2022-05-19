@@ -56,7 +56,20 @@ func (v *variable[T]) Set(value T) {
 	prev := v.value.Swap(value)
 	val, _ := prev.(T)
 	if val != value {
-		v.log(v.FullName(), value)
 		v.event.Publish(value)
+		go v.log(v.FullName(), value)
 	}
+}
+
+func NewVariable[T comparable](name string) Variable[T] {
+	res := &variable[T]{
+		event:  event.NewEvent[T](),
+		name:   name,
+		prefix: getPrefix[T](),
+		log:    discard,
+	}
+
+	res.Set(getZeroValue[T]())
+
+	return res
 }
