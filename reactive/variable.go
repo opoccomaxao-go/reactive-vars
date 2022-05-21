@@ -11,6 +11,7 @@ type сommonVariable interface {
 	Name() string
 	Prefix() string
 	FullName() string
+	Repeat()
 }
 
 type Variable[T comparable] interface {
@@ -19,6 +20,8 @@ type Variable[T comparable] interface {
 	Get() T
 	Set(T)
 }
+
+var _ Variable[struct{}] = (*variable[struct{}])(nil)
 
 type variable[T comparable] struct {
 	event  event.Event[T]
@@ -42,6 +45,10 @@ func (v *variable[T]) Prefix() string {
 
 func (v *variable[T]) FullName() string {
 	return v.prefix + ":" + v.name
+}
+
+func (v *variable[T]) Repeat() {
+	v.event.Publish(v.value.Load().(T))
 }
 
 func (v *variable[T]) OnChange(fn func(T)) event.Subscriber {
