@@ -38,6 +38,7 @@ func (v *syncVariable[T]) Sync(ptr *T) {
 	}
 
 	v.syncs = append(v.syncs, ptr)
+	*ptr = v.Get()
 }
 
 func (v *syncVariable[T]) Unsync(ptr *T) {
