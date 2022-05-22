@@ -1,61 +1,81 @@
 package reactive
 
 import (
-	"github.com/opoccomaxao-go/event/v3"
+	"sync"
+
+	"golang.org/x/exp/slices"
 )
 
 type SyncVariable[T comparable] interface {
-	typedVariable[T]
+	Variable[T]
 
-	// GetSyncPtr returns pointer to synchronous value. Do not change value, read-only use.
-	GetSyncPtr() *T
-	// OnChange sends to listener pointer to synchronous value. Do not change listeners value, read-only use.
-	OnChange(listener func(*T)) event.Subscriber
-	Repeat()
+	// Sync keep value sync with internal value.
+	Sync(*T)
+	Unsync(*T)
 }
 
 type syncVariable[T comparable] struct {
-	typedVariableImpl[T]
+	variable[T]
 
-	syncValue T
-	event     event.Event[*T]
+	syncs []*T
+	mu    sync.Mutex
 }
 
 var _ SyncVariable[struct{}] = (*syncVariable[struct{}])(nil)
 
-func (v *syncVariable[T]) GetSyncPtr() *T {
-	return &v.syncValue
+func (v *syncVariable[T]) Sync(ptr *T) {
+	if ptr == nil {
+		return
+	}
+
+	v.mu.Lock()
+	defer v.mu.Unlock()
+
+	// find duplicates
+	idx := slices.Index(v.syncs, ptr)
+	if idx >= 0 {
+		return
+	}
+
+	v.syncs = append(v.syncs, ptr)
 }
 
-func (v *syncVariable[T]) OnChange(listener func(*T)) event.Subscriber {
-	return v.event.Subscribe(listener)
+func (v *syncVariable[T]) Unsync(ptr *T) {
+	if ptr == nil {
+		return
+	}
+
+	v.mu.Lock()
+	defer v.mu.Unlock()
+
+	idx := slices.Index(v.syncs, ptr)
+	if idx == -1 {
+		return
+	}
+
+	// this is used to atomic replace of v.syncs to remove any locks from syncListener.
+	res := make([]*T, idx, len(v.syncs))
+	copy(res, v.syncs[:idx])
+
+	v.syncs = append(res, v.syncs[idx+1:]...)
 }
 
-func (v *syncVariable[T]) Repeat() {
-	v.event.Publish(&v.syncValue)
-}
+func (v *syncVariable[T]) syncListener(value T) {
+	syncs := v.syncs
 
-func (v *syncVariable[T]) Set(value T) {
-	prev := v.value.Swap(value)
-	v.syncValue, _ = prev.(T)
-	if v.syncValue != value {
-		v.event.Publish(&v.syncValue)
+	for _, ptr := range syncs {
+		*ptr = value
 	}
 }
 
 func (v *syncVariable[T]) init() {
-	v.Set(v.syncValue)
+	v.variable.init()
+	v.OnChange(v.syncListener)
 }
 
 func NewSyncVariable[T comparable](name string) SyncVariable[T] {
 	res := &syncVariable[T]{
-		typedVariableImpl: typedVariableImpl[T]{
-			commonVariableImpl: commonVariableImpl{
-				name:   name,
-				prefix: getPrefix[T](),
-			},
-		},
-		event: event.NewEvent[*T](),
+		variable: newVariable[T](name, getPrefix[T]()),
 	}
 
 	res.init()
