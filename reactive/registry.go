@@ -4,39 +4,35 @@ import (
 	"log"
 	"os"
 	"sync"
-
-	"github.com/opoccomaxao-go/event/v3"
 )
 
 type Registry interface {
 	Float(name string) Variable[float64]
 	Bool(name string) Variable[bool]
 	Dump() map[string]interface{}
-	Debug()
 }
 
 type registry struct {
 	mu     sync.Mutex
 	config Config
-	vars   []сommonVariable
-	log    func(string, interface{})
+	vars   []commonVariable
+	logger *log.Logger
 }
 
 type Config struct {
-	Name string
+	Name  string
+	Debug bool
 }
-
-func discard(string, interface{}) {}
 
 func New(config Config) Registry {
 	return &registry{
 		config: config,
-		vars:   make([]сommonVariable, 0, 100),
-		log:    discard,
+		vars:   make([]commonVariable, 0, 100),
+		logger: log.New(os.Stdout, "", log.Flags()),
 	}
 }
 
-func (r *registry) Find(prefix, name string) сommonVariable {
+func (r *registry) Find(prefix, name string) commonVariable {
 	for _, v := range r.vars {
 		if v.Prefix() == prefix && v.Name() == name {
 			return v
@@ -54,15 +50,8 @@ func (r *registry) Bool(name string) Variable[bool] {
 	return getVariable[bool](r, name)
 }
 
-func (r *registry) Debug() {
-	logger := log.New(os.Stdout, "", log.Flags())
-	r.log = func(name string, value interface{}) {
-		logger.Printf("%s:%s = %v\n", r.config.Name, name, value)
-	}
-}
-
-func (r *registry) Log(name string, value interface{}) {
-	r.log(name, value)
+func (r *registry) log(variable commonVariable) {
+	r.logger.Printf("%s:%s = %v\n", r.config.Name, variable.FullName(), variable.Value())
 }
 
 func (r *registry) Dump() map[string]interface{} {
@@ -75,27 +64,32 @@ func (r *registry) Dump() map[string]interface{} {
 	return res
 }
 
+func getLoggerListener[T comparable](r *registry, variable Variable[T]) func(T) {
+	return func(T) {
+		r.log(variable)
+	}
+}
+
 func getVariable[T comparable](r *registry, name string) Variable[T] {
 	prefix := getPrefix[T]()
 
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	res, ok := r.Find(prefix, name).(Variable[T])
-	if ok {
-		return res
+	{
+		resVariable, ok := r.Find(prefix, name).(Variable[T])
+		if ok {
+			return resVariable
+		}
 	}
 
-	res = &variable[T]{
-		event:  event.NewEvent[T](),
-		prefix: prefix,
-		name:   name,
-		log:    r.Log,
+	tempVariable := newVariable[T](name, prefix)
+	r.vars = append(r.vars, &tempVariable)
+
+	tempVariable.init()
+	if r.config.Debug {
+		tempVariable.OnChange(getLoggerListener[T](r, &tempVariable)).Async()
 	}
 
-	res.Set(getZeroValue[T]())
-
-	r.vars = append(r.vars, res)
-
-	return res
+	return &tempVariable
 }

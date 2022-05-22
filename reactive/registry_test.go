@@ -14,8 +14,10 @@ func bindChanges[T any](dest *[]string) func(T) {
 }
 
 func TestRegistry(t *testing.T) {
-	r := New(Config{Name: "test"})
-	r.Debug()
+	r := New(Config{
+		Name:  "test",
+		Debug: true,
+	})
 
 	changes := []string{}
 
