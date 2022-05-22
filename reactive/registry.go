@@ -7,8 +7,8 @@ import (
 )
 
 type Registry interface {
-	Float(name string) Variable[float64]
-	Bool(name string) Variable[bool]
+	Float(name string) SyncVariable[float64]
+	Bool(name string) SyncVariable[bool]
 	Dump() map[string]interface{}
 }
 
@@ -42,11 +42,11 @@ func (r *registry) Find(prefix, name string) commonVariable {
 	return nil
 }
 
-func (r *registry) Float(name string) Variable[float64] {
+func (r *registry) Float(name string) SyncVariable[float64] {
 	return getVariable[float64](r, name)
 }
 
-func (r *registry) Bool(name string) Variable[bool] {
+func (r *registry) Bool(name string) SyncVariable[bool] {
 	return getVariable[bool](r, name)
 }
 
@@ -70,20 +70,20 @@ func getLoggerListener[T comparable](r *registry, variable Variable[T]) func(T) 
 	}
 }
 
-func getVariable[T comparable](r *registry, name string) Variable[T] {
+func getVariable[T comparable](r *registry, name string) SyncVariable[T] {
 	prefix := getPrefix[T]()
 
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
 	{
-		resVariable, ok := r.Find(prefix, name).(Variable[T])
+		resVariable, ok := r.Find(prefix, name).(SyncVariable[T])
 		if ok {
 			return resVariable
 		}
 	}
 
-	tempVariable := newVariable[T](name, prefix)
+	tempVariable := newSyncVariable[T](name, prefix)
 	r.vars = append(r.vars, &tempVariable)
 
 	tempVariable.init()

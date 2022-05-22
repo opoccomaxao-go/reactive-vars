@@ -73,6 +73,12 @@ func (v *syncVariable[T]) init() {
 	v.OnChange(v.syncListener)
 }
 
+func newSyncVariable[T comparable](name string, prefix string) syncVariable[T] {
+	return syncVariable[T]{
+		variable: newVariable[T](name, prefix),
+	}
+}
+
 func NewSyncVariable[T comparable](name string) SyncVariable[T] {
 	res := &syncVariable[T]{
 		variable: newVariable[T](name, getPrefix[T]()),
