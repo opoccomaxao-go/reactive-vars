@@ -51,7 +51,7 @@ func (r *registry) Bool(name string) SyncVariable[bool] {
 }
 
 func (r *registry) log(variable commonVariable) {
-	r.logger.Printf("%s:%s = %v\n", r.config.Name, variable.FullName(), variable.Value())
+	r.logger.Printf("%s = %v\n", variable.FullName(), variable.Value())
 }
 
 func (r *registry) Dump() map[string]interface{} {
@@ -71,7 +71,7 @@ func getLoggerListener[T comparable](r *registry, variable Variable[T]) func(T) 
 }
 
 func getVariable[T comparable](r *registry, name string) SyncVariable[T] {
-	prefix := getPrefix[T]()
+	prefix := getPrefix[T]() + ":" + r.config.Name
 
 	r.mu.Lock()
 	defer r.mu.Unlock()
