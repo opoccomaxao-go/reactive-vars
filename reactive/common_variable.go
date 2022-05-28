@@ -7,6 +7,7 @@ type commonVariable interface {
 	Name() string
 	Prefix() string
 	FullName() string
+	Rename(string)
 }
 
 type commonVariableImpl struct {
@@ -31,4 +32,8 @@ func (v *commonVariableImpl) Prefix() string {
 
 func (v *commonVariableImpl) FullName() string {
 	return v.prefix + ":" + v.name
+}
+
+func (v *commonVariableImpl) Rename(newName string) {
+	v.name = newName
 }
