@@ -10,6 +10,7 @@ type Registry interface {
 	Float(name string) SyncVariable[float64]
 	Bool(name string) SyncVariable[bool]
 	Dump() map[string]interface{}
+	GetAll() []CommonVariable
 }
 
 type registry struct {
@@ -62,6 +63,10 @@ func (r *registry) Dump() map[string]interface{} {
 	}
 
 	return res
+}
+
+func (r *registry) GetAll() []CommonVariable {
+	return append([]CommonVariable{}, r.vars...)
 }
 
 func getLoggerListener[T comparable](r *registry, variable Variable[T]) func(T) {

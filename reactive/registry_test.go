@@ -58,4 +58,10 @@ func TestRegistry(t *testing.T) {
 		"bool:test:a":    false,
 		"bool:test:b":    true,
 	}, r.Dump())
+
+	assert.Equal(t, []CommonVariable{
+		r.Bool("a"),
+		r.Float("a"),
+		r.Bool("b"),
+	}, r.GetAll())
 }
