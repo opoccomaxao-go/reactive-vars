@@ -15,7 +15,7 @@ type Registry interface {
 type registry struct {
 	mu     sync.Mutex
 	config Config
-	vars   []commonVariable
+	vars   []CommonVariable
 	logger *log.Logger
 }
 
@@ -27,12 +27,12 @@ type Config struct {
 func New(config Config) Registry {
 	return &registry{
 		config: config,
-		vars:   make([]commonVariable, 0, 100),
+		vars:   make([]CommonVariable, 0, 100),
 		logger: log.New(os.Stdout, "", log.Flags()),
 	}
 }
 
-func (r *registry) Find(prefix, name string) commonVariable {
+func (r *registry) Find(prefix, name string) CommonVariable {
 	for _, v := range r.vars {
 		if v.Prefix() == prefix && v.Name() == name {
 			return v
@@ -50,7 +50,7 @@ func (r *registry) Bool(name string) SyncVariable[bool] {
 	return getVariable[bool](r, name)
 }
 
-func (r *registry) log(variable commonVariable) {
+func (r *registry) log(variable CommonVariable) {
 	r.logger.Printf("%s = %v\n", variable.FullName(), variable.Value())
 }
 

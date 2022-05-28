@@ -1,7 +1,7 @@
 package reactive
 
 type typedVariable[T comparable] interface {
-	commonVariable
+	CommonVariable
 
 	Get() T
 	Set(T)

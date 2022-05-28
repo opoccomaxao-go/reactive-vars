@@ -2,7 +2,8 @@ package reactive
 
 import "sync/atomic"
 
-type commonVariable interface {
+// CommonVariable is base interface for all variables.
+type CommonVariable interface {
 	Value() interface{}
 	Name() string
 	Prefix() string
@@ -16,7 +17,7 @@ type commonVariableImpl struct {
 	value  atomic.Value
 }
 
-var _ commonVariable = (*commonVariableImpl)(nil)
+var _ CommonVariable = (*commonVariableImpl)(nil)
 
 func (v *commonVariableImpl) Value() interface{} {
 	return v.value.Load()
