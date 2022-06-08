@@ -9,6 +9,7 @@ import (
 type Registry interface {
 	Float(name string) SyncVariable[float64]
 	Bool(name string) SyncVariable[bool]
+	String(name string) SyncVariable[string]
 	Dump() map[string]interface{}
 	GetAll() []CommonVariable
 }
@@ -49,6 +50,10 @@ func (r *registry) Float(name string) SyncVariable[float64] {
 
 func (r *registry) Bool(name string) SyncVariable[bool] {
 	return getVariable[bool](r, name)
+}
+
+func (r *registry) String(name string) SyncVariable[string] {
+	return getVariable[string](r, name)
 }
 
 func (r *registry) log(variable CommonVariable) {
